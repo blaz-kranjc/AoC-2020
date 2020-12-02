@@ -1,0 +1,9 @@
+{
+    "name": "rank-of-graph",
+    "version-string": "wife-almost-happy",
+    "dependencies": [
+      "catch2",
+      "range-v3",
+      "fmt"
+    ]
+}

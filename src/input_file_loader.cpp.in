@@ -1,0 +1,30 @@
+#include "input_file_loader.h"
+
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+namespace {
+
+static const std::filesystem::path default_path = "@CMAKE_SOURCE_DIR@/resources";
+static const std::string default_data_extension = "txt";
+std::filesystem::path default_data_file(const char* program_path)
+{
+  auto filename = std::filesystem::path{ program_path }.filename();
+  filename.replace_extension(default_data_extension);
+  return default_path / filename;
+}
+
+}// namespace
+
+std::ifstream load_input(int argc, char** argv)
+{
+  auto filename = [=]{
+    if (argc == 1) {
+      return default_data_file(argv[0]);
+    } else {
+      return std::filesystem::path{ argv[1] };
+	}
+  }();
+  return std::ifstream{ filename };
+}

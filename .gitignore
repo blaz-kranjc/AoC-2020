@@ -1,0 +1,6 @@
+.vs/
+.vscode/
+.ionide/
+build/
+out/
+CMakeSettings.json
