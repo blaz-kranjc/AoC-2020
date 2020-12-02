@@ -24,6 +24,7 @@ int main(int argc, char** argv)
       if (data.find(2020 - e) != data.end())
         return e * (2020 - e);
     }
+    return -1;
   }();
   fmt::print("Part 1: {}\n", part1);
 
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
         }
       }
     }
+    return -1;
   }();
   fmt::print("Part 2: {}\n", part2);
 }
