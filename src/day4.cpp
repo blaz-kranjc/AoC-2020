@@ -3,7 +3,6 @@
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
 #include <string>
-#include <functional>
 #include <charconv>
 
 bool is_number_between(std::string_view data, std::pair<int, int> limits)
@@ -11,7 +10,6 @@ bool is_number_between(std::string_view data, std::pair<int, int> limits)
   auto value{ 0 };
   const auto [ptr, ec] = std::from_chars(data.data(), data.data() + data.size(), value);
   return (ptr == data.data() + data.size())
-      && (ec == std::errc{})
       && value <= limits.second
       && value >= limits.first;
 }
@@ -29,7 +27,7 @@ bool is_valid_hex(std::string_view data)
 static constexpr std::array tags{ "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid" };
 static constexpr std::array valid_colors{ "amb", "blu", "brn", "gry", "grn", "hzl", "oth" };
 
-static const std::array<std::function<bool(std::string_view)>, tags.size()> validators{
+static const std::array<bool(*)(std::string_view), tags.size()> validators{
   /*byr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 1920, 2002 }); },
   /*iyr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 2010, 2020 }); },
   /*eyr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 2020, 2030 }); },
