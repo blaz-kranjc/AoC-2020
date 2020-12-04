@@ -79,13 +79,13 @@ std::vector<passport_t> parse(std::istream &&is)
     if (is.peek() == '\n') {
       is.ignore();
       if (has_only_valid_tags) {
-        result.emplace_back(std::move(current_passport));
+        result.push_back(std::move(current_passport));
       }
       current_passport.fill("");
       has_only_valid_tags = true;
     }
   }
-  result.push_back(current_passport);
+  result.push_back(std::move(current_passport));
 
   return result;
 }
