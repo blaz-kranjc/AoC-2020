@@ -24,18 +24,18 @@ bool is_valid_hex(std::string_view data)
   );
 }
 
-static constexpr std::array tags{ "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid" };
 static constexpr std::array valid_colors{ "amb", "blu", "brn", "gry", "grn", "hzl", "oth" };
 
+static constexpr std::array tags{ "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid" };
 static const std::array<bool(*)(std::string_view), tags.size()> validators{
   /*byr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 1920, 2002 }); },
   /*iyr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 2010, 2020 }); },
   /*eyr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 2020, 2030 }); },
   /*hgt*/ [](std::string_view data) {
         if (const auto measurement = data.substr(0, data.size() - 2); data.ends_with("cm")) {
-            return is_number_between(measurement, std::pair{ 150, 193 });
+          return is_number_between(measurement, std::pair{ 150, 193 });
         } else if (data.ends_with("in")) {
-            return is_number_between(measurement, std::pair{ 59, 76 });
+          return is_number_between(measurement, std::pair{ 59, 76 });
         } else {
           return false;
         } },
@@ -79,7 +79,7 @@ std::vector<passport_t> parse(std::istream &&is)
     if (is.peek() == '\n') {
       is.ignore();
       if (has_only_valid_tags) {
-        result.push_back(current_passport);
+        result.emplace_back(std::move(current_passport));
       }
       current_passport.fill("");
       has_only_valid_tags = true;
