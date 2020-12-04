@@ -26,7 +26,7 @@ int count_hits(const std::vector<std::string> data, std::pair<int, int> slope)
 
 int main(int argc, char **argv)
 {
-  auto data = parse(load_input(argc, argv));
+  const auto data = parse(load_input(argc, argv));
 
   fmt::print("Part 1: {}\n", count_hits(data, std::pair{ 1, 3 }));
 

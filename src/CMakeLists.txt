@@ -16,4 +16,5 @@ endfunction()
 aoc2020(1)
 aoc2020(2)
 aoc2020(3)
+aoc2020(4)
 

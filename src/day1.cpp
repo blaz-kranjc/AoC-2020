@@ -21,7 +21,7 @@ int main(int argc, char** argv)
 
   auto part1 = [&] {
     for (auto e : data) {
-      if (data.find(2020 - e) != data.end())
+      if (data.contains(2020 - e))
         return e * (2020 - e);
     }
     return -1;
