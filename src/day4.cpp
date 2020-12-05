@@ -4,6 +4,7 @@
 #include <fmt/core.h>
 #include <string>
 #include <charconv>
+#include <cctype>
 
 bool is_number_between(std::string_view data, std::pair<int, int> limits)
 {
@@ -39,10 +40,12 @@ static const std::array<bool(*)(std::string_view), tags.size()> validators{
         } else {
           return false;
         } },
-  /*hcl*/ [](std::string_view data) { return is_valid_hex(data); },
+  /*hcl*/ is_valid_hex,
   /*ecl*/ [](std::string_view data) { return ranges::contains(valid_colors, data); },
-  /*pid*/ [](std::string_view data) { return data.size() == 9 && ranges::all_of(data, [](auto c) { return c >= '0' && c <= '9'; }); },
-  /*cid*/ [](std::string_view data) { return true; },
+  /*pid*/ [](std::string_view data) {
+          return data.size() == 9 && ranges::all_of(data, [](auto c) { return std::isdigit(c); });
+        },
+  /*cid*/ [](auto) { return true; },
 };
 
 std::string_view tag(std::string_view field)

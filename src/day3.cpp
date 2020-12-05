@@ -14,6 +14,14 @@ std::vector<std::string> parse(std::istream &&is)
   return result;
 }
 
+static constexpr std::array slopes{
+  std::pair{ 1, 1 },
+  std::pair{ 1, 3 },
+  std::pair{ 1, 5 },
+  std::pair{ 1, 7 },
+  std::pair{ 2, 1 },
+};
+
 int count_hits(const std::vector<std::string> data, std::pair<int, int> slope)
 {
   int count = 0;
@@ -31,13 +39,6 @@ int main(int argc, char **argv)
   fmt::print("Part 1: {}\n", count_hits(data, std::pair{ 1, 3 }));
 
   const auto part2 = [&] {
-    constexpr std::array slopes{
-      std::pair{ 1, 1 },
-      std::pair{ 1, 3 },
-      std::pair{ 1, 5 },
-      std::pair{ 1, 7 },
-      std::pair{ 2, 1 },
-    };
     return ranges::accumulate(
       slopes | ranges::views::transform([&](auto slope) { return count_hits(data, slope); }),
       1,

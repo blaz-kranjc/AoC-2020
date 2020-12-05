@@ -21,8 +21,9 @@ int main(int argc, char** argv)
 
   auto part1 = [&] {
     for (auto e : data) {
-      if (data.contains(2020 - e))
+      if (data.contains(2020 - e)) {
         return e * (2020 - e);
+      }
     }
     return -1;
   }();
@@ -30,7 +31,7 @@ int main(int argc, char** argv)
 
   auto part2 = [&] {
     for (auto e : data) {
-      for (auto f : data) {
+      for (auto f : data | ranges::views::drop(1)) {
         const auto residual = 2020 - e - f;
         if (data.find(residual) != data.end()) {
           return residual * e * f;
