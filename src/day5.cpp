@@ -5,7 +5,6 @@
 #include <string>
 #include <cinttypes>
 #include <vector>
-#include <bitset>
 
 constexpr std::uint64_t seat_id(std::string_view pass) {
   std::uint64_t id{ 0 };
@@ -25,6 +24,7 @@ std::vector<std::uint64_t> parse(std::istream &&is)
     if (!data.empty()) {
       result.push_back(seat_id(data));
     }
+    data.clear();
   }
   return result;
 }
@@ -32,15 +32,10 @@ std::vector<std::uint64_t> parse(std::istream &&is)
 int main(int argc, char **argv)
 {
   const auto data = parse(load_input(argc, argv));
-  fmt::print("Part 1: {}\n", *ranges::max_element(data));
+  const auto [min_it, max_it] = ranges::minmax_element(data);
+  fmt::print("Part 1: {}\n", *max_it);
 
-  const auto empty_seat = [&] {
-    std::bitset<128 * 8> taken_seats;
-    ranges::for_each(data, [&](auto el) { taken_seats.set(el); });
-    std::uint64_t empty{ 0 };
-    for (; !taken_seats.test(empty); ++empty) {}
-    for (; taken_seats.test(empty); ++empty) {}
-    return empty;
-  }();
-  fmt::print("Part 2: {}\n", empty_seat);
+  const auto expected_full_sum = ((*min_it + *max_it) * (*max_it - *min_it + 1)) / 2;
+  const auto sum = ranges::accumulate(data, 0ull);
+  fmt::print("Part 2: {}\n", expected_full_sum - sum);
 }
