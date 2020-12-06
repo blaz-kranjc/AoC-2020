@@ -2,9 +2,8 @@
 
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
-#include <string>
 #include <vector>
-#include <bitset>
+#include <array>
 
 using group_t = std::pair<int, std::array<int, 26>>;
 
@@ -18,28 +17,28 @@ std::vector<group_t> parse(std::istream &&is)
   char previous{ 0 };
   while (!is.eof()) {
     current = is.get();
-    if (current == '\n' && previous == '\n') {
+    if (!std::islower(current) && !std::islower(previous)) {
       results.emplace_back(count, std::move(group));
       count = 0;
       group.fill(0);
-    } else if (current == '\n') {
-      ++count;
-    } else if (current >= 'a' && current <= 'z') {
+    } else if (std::islower(current)) {
       ++group[current - 'a'];
+    } else {
+      ++count;
     }
-
     std::swap(current, previous);
   }
-  results.emplace_back(count, std::move(group));
   return results;
 }
 
-int count_distinct_yes(const group_t &g) {
+int count_distinct_yes(const group_t &g)
+{
   return ranges::count_if(g.second, [](auto e) { return e > 0; });
 }
 
-int count_group_yes(const group_t& g) {
-  return ranges::count_if(g.second, [n=g.first](auto e) { return e == n; });
+int count_group_yes(const group_t &g)
+{
+  return ranges::count_if(g.second, [n = g.first](auto e) { return e == n; });
 }
 
 int main(int argc, char **argv)
