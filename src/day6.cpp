@@ -31,12 +31,12 @@ std::vector<group_t> parse(std::istream &&is)
   return results;
 }
 
-int count_distinct_yes(const group_t &g)
+std::size_t count_distinct_yes(const group_t &g)
 {
   return ranges::count_if(g.second, [](auto e) { return e > 0; });
 }
 
-int count_group_yes(const group_t &g)
+std::size_t count_group_yes(const group_t &g)
 {
   return ranges::count_if(g.second, [n = g.first](auto e) { return e == n; });
 }

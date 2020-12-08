@@ -6,59 +6,68 @@
 #include <charconv>
 #include <cctype>
 
-bool is_number_between(std::string_view data, std::pair<int, int> limits)
+template<int min, int max>
+bool is_number_between(std::string_view data)
 {
   auto value{ 0 };
   const auto [ptr, ec] = std::from_chars(data.data(), data.data() + data.size(), value);
-  return (ptr == data.data() + data.size())
-      && value <= limits.second
-      && value >= limits.first;
+  return (ptr == data.data() + data.size()) && value <= max && value >= min;
 }
 
 bool is_valid_hex(std::string_view data)
 {
   return data.size() == 7
-      && data[0] == '#'
-      && ranges::all_of(
-          data | ranges::views::drop(1),
-          [](auto c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'); }
-  );
+         && data[0] == '#'
+         && ranges::all_of(
+           data | ranges::views::drop(1),
+           [](auto c) { return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'); });
 }
+
+constexpr bool non_empty(std::string_view data)
+{
+  return !data.empty();
+}
+
+template<auto c>
+constexpr auto constant(auto) { return c; }
 
 static constexpr std::array valid_colors{ "amb", "blu", "brn", "gry", "grn", "hzl", "oth" };
 
-static constexpr std::array tags{ "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid" };
-static const std::array<bool(*)(std::string_view), tags.size()> validators{
-  /*byr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 1920, 2002 }); },
-  /*iyr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 2010, 2020 }); },
-  /*eyr*/ [](std::string_view data) { return is_number_between(data, std::pair{ 2020, 2030 }); },
-  /*hgt*/ [](std::string_view data) {
-        if (const auto measurement = data.substr(0, data.size() - 2); data.ends_with("cm")) {
-          return is_number_between(measurement, std::pair{ 150, 193 });
+using validator_t = bool(*)(std::string_view);
+using field_t = std::tuple<std::string_view, validator_t, validator_t>;
+static constexpr std::array fields{
+  field_t{ "byr", non_empty, is_number_between<1920, 2002> },
+  field_t{ "iyr", non_empty, is_number_between<2010, 2020> },
+  field_t{ "eyr", non_empty, is_number_between<2020, 2030> },
+  field_t{
+    "hgt",
+    non_empty,
+    [](std::string_view data) {
+          if (const auto measurement = data.substr(0, data.size() - 2); data.ends_with("cm")) {
+          return is_number_between<150, 193>(measurement);
         } else if (data.ends_with("in")) {
-          return is_number_between(measurement, std::pair{ 59, 76 });
+          return is_number_between<59, 76>(measurement);
         } else {
           return false;
-        } },
-  /*hcl*/ is_valid_hex,
-  /*ecl*/ [](std::string_view data) { return ranges::contains(valid_colors, data); },
-  /*pid*/ [](std::string_view data) {
-          return data.size() == 9 && ranges::all_of(data, [](auto c) { return std::isdigit(c); });
-        },
-  /*cid*/ [](auto) { return true; },
+        } } },
+  field_t{ "hcl", non_empty, is_valid_hex },
+  field_t{
+    "ecl",
+    non_empty,
+    [](std::string_view data) { return ranges::contains(valid_colors, data); } },
+  field_t{
+    "pid",
+    non_empty,
+    [](std::string_view data) {
+      return data.size() == 9 && ranges::all_of(data, [](auto c) { return std::isdigit(c); });
+    } },
+  field_t{ "cid", constant<true>, constant<true> },
 };
 
-std::string_view tag(std::string_view field)
-{
-  return field.substr(0, 3);
-}
+std::string_view tag(std::string_view field) { return field.substr(0, 3); }
+std::string_view value(std::string_view field) { return field.substr(4); }
 
-std::string_view value(std::string_view field)
-{
-  return field.substr(4);
-}
-
-using passport_t = std::array<std::string, tags.size()>;
+using passport_t = std::array<std::string, fields.size()>;
 
 std::vector<passport_t> parse(std::istream &&is)
 {
@@ -69,11 +78,11 @@ std::vector<passport_t> parse(std::istream &&is)
   bool has_only_valid_tags = true;
   while (!is.eof()) {
     is >> current_field;
-    const auto id_it = ranges::find(tags, tag(current_field));
-    if (id_it == tags.cend()) {
-      has_only_valid_tags = false;
-    } else if (const auto index = std::distance(tags.cbegin(), id_it); current_passport[index].empty()) {
-      current_passport[index] = value(current_field);
+    const auto tag_it = ranges::find_if(fields, [t = tag(current_field)](const auto &e) { return std::get<0>(e) == t; });
+    if (tag_it == fields.end()) {
+      has_only_valid_tags= false;
+    } else if (int ind = std::distance(fields.cbegin(), tag_it); current_passport[ind].empty()) {
+      current_passport[ind] = value(current_field);
     } else {
       has_only_valid_tags = false;
     }
@@ -93,22 +102,17 @@ std::vector<passport_t> parse(std::istream &&is)
   return result;
 }
 
-bool is_valid_1(const passport_t &data)
-{
-  return ranges::none_of(data | ranges::views::drop_last(1), &std::string::empty);
-}
-
-bool is_valid_2(const passport_t &data)
+template <int validator_index>
+bool is_valid(const passport_t &data)
 {
   return ranges::all_of(
-    ranges::views::zip(validators, data),
-    [](const auto &el) { return el.first(el.second); });
+    ranges::views::zip(fields, data),
+    [](const auto &el) { return std::get<validator_index>(el.first)(el.second); });
 }
-
 
 int main(int argc, char **argv)
 {
   const auto data = parse(load_input(argc, argv));
-  fmt::print("Part 1: {}\n", ranges::count_if(data, is_valid_1));
-  fmt::print("Part 2: {}\n", ranges::count_if(data, is_valid_2));
+  fmt::print("Part 1: {}\n", ranges::count_if(data, is_valid<1>));
+  fmt::print("Part 2: {}\n", ranges::count_if(data, is_valid<2>));
 }
