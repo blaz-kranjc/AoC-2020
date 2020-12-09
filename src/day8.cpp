@@ -4,16 +4,20 @@
 #include <range/v3/all.hpp>
 #include <charconv>
 #include <optional>
+#include <vector>
 
-enum class InstructionType {
-  Acc,
-  Jmp,
-  Noop,
-};
+// TODO: Handle the parsing errors gracefully (lift out of parse)
+// TODO: implement shortest modification path solution for part 2
 
 struct Instruction
 {
-  InstructionType type;
+  enum class Type {
+    Acc,
+    Jmp,
+    Noop,
+  };
+
+  Type type;
   int argument;
 };
 
@@ -21,18 +25,16 @@ std::vector<Instruction> parse(std::istream &&is)
 {
   std::vector<Instruction> result;
   for (std::string line; std::getline(is, line);) {
-    InstructionType type = [&] {
+    Instruction::Type type = [&] {
       if (line.starts_with("acc")) {
-        return InstructionType::Acc;
+        return Instruction::Type::Acc;
       } else if (line.starts_with("jmp")) {
-        return InstructionType::Jmp;
+        return Instruction::Type::Jmp;
       } else {
-        return InstructionType::Noop;
-        // TODO handle errors
+        return Instruction::Type::Noop;
       }
     }();
     int arg;
-    // TODO handle errors
     std::from_chars(line.data() + 5, line.data() + line.size(), arg);
     result.emplace_back(type, arg * (line[4] == '-' ? -1 : 1));
   }
@@ -41,7 +43,7 @@ std::vector<Instruction> parse(std::istream &&is)
 
 std::pair<bool, int> run_until_first_loop(const std::vector<Instruction> &program)
 {
-  std::vector<int> hit(program.size(), 0);
+  std::vector<bool> hit(program.size(), false);
   int acc{ 0 };
 
   for (int cursor = 0; cursor < program.size();) {
@@ -49,12 +51,12 @@ std::pair<bool, int> run_until_first_loop(const std::vector<Instruction> &progra
     if (hit[cursor]) {
       return std::pair{ false, acc };
     } else {
-      hit[cursor] = 1;
+      hit[cursor] = true;
     }
 
-    if (t == InstructionType::Jmp) {
+    if (t == Instruction::Type::Jmp) {
       cursor += a;
-    } else if (t == InstructionType::Acc) {
+    } else if (t == Instruction::Type::Acc) {
       acc += a;
       ++cursor;
     } else {
@@ -74,12 +76,12 @@ std::optional<std::vector<Instruction>> fix_program(const std::vector<Instructio
         program.begin() + curr,
         program.end(),
         [](auto el) {
-          return el.type == InstructionType::Jmp || el.type == InstructionType::Noop;
+          return el.type == Instruction::Type::Jmp || el.type == Instruction::Type::Noop;
         }));
   };
   auto program_copy = program;
   for (auto i = next_possible_index(0); i < program.size(); i = next_possible_index(i + 1)) {
-    program_copy[i].type = program[i].type == InstructionType::Noop ? InstructionType::Jmp : InstructionType::Noop;
+    program_copy[i].type = program[i].type == Instruction::Type::Noop ? Instruction::Type::Jmp : Instruction::Type::Noop;
     if (run_until_first_loop(program_copy).first) {
       return program_copy;
     } else {

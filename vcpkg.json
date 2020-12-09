@@ -1,9 +1,8 @@
 {
-    "name": "rank-of-graph",
-    "version-string": "wife-almost-happy",
-    "dependencies": [
-      "catch2",
-      "range-v3",
-      "fmt"
-    ]
+  "name": "advent-of-code-2020",
+  "version-string": "gift-wrapped",
+  "dependencies": [
+    "range-v3",
+    "fmt"
+  ]
 }

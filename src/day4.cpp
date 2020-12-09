@@ -81,7 +81,7 @@ std::vector<passport_t> parse(std::istream &&is)
     const auto tag_it = ranges::find_if(fields, [t = tag(current_field)](const auto &e) { return std::get<0>(e) == t; });
     if (tag_it == fields.end()) {
       has_only_valid_tags= false;
-    } else if (int ind = std::distance(fields.cbegin(), tag_it); current_passport[ind].empty()) {
+    } else if (const auto ind = std::distance(fields.cbegin(), tag_it); current_passport[ind].empty()) {
       current_passport[ind] = value(current_field);
     } else {
       has_only_valid_tags = false;
