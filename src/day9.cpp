@@ -19,7 +19,7 @@ template <typename Iter, typename T>
 bool contains_sum(Iter begin, Iter end, const T& value) {
   for (; begin + 1 != end; ++begin) {
     for (auto it = begin + 1; it != end; ++it) {
-      if (*begin + *it == value) return true;
+      if (*begin + *it == value && *begin != *it) return true;
     }
   }
   return false;
