@@ -46,7 +46,7 @@ int main(int argc, char** argv)
   const auto part2 = [&, part1] {
     auto begin = data.cbegin();
     auto end = data.cbegin() + 1;
-    int sum = *begin;
+    auto sum = *begin;
     while (end != data.end()) {
       if (sum == part1) {
         auto mm = ranges::minmax_element(begin, end);
