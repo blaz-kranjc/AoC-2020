@@ -36,22 +36,20 @@ std::array<int, 3> count_gaps(const std::unordered_set<int>& data, int max)
 long long n_arrangements(const std::unordered_set<int> &data, int max)
 {
   std::unordered_map<int, long long> cache;
+  cache.emplace(max, 1ll);
   const auto impl = [&](auto &&f, int index) {
     if (const auto it = cache.find(index); it != cache.cend()) {
       return it->second;
+    } else {
+      const auto value = ranges::accumulate(
+        ranges::views::iota(index + 1, std::min(max, index + 3) + 1)
+          | ranges::views::filter([&](auto i) { return data.contains(i); })
+          | ranges::views::transform([&](auto i) { return f(f, i); }),
+        0ll
+      );
+      cache.emplace(index, value);
+      return value;
     }
-    if (index == max) {
-      cache.emplace(index, 1);
-      return 1ll;
-    }
-    long long value = 0;
-    for (int i = index + 1; i <= std::min(max, index + 3); ++i) {
-      if (data.contains(i)) {
-        value += f(f, i);
-      }
-    }
-    cache.emplace(index, value);
-    return value;
   };
   return impl(impl, 0);
 }
