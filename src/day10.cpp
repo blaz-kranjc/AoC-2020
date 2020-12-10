@@ -2,58 +2,66 @@
 
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
-#include <vector>
 #include <iostream>
+#include <unordered_set>
+#include <unordered_map>
+#include <algorithm>
 
-std::vector<int> parse(std::istream &&is)
+std::unordered_set<int> parse(std::istream &&is)
 {
-  std::vector<int> result;
-  long long el;
+  std::unordered_set<int> result;
+  int el;
   while (is >> el) {
-    result.push_back(el);
+    result.insert(el);
   }
   return result;
 }
 
-long long n_arrangements(const std::vector<int> &data)
+// Max is at most 3*N, so this is O(N)
+std::array<int, 3> count_gaps(const std::unordered_set<int>& data, int max)
 {
-  std::vector<long long> cache(data.size(), -1);
-  const auto impl = [&](auto &&f, std::size_t index) {
-    if (cache[index] >= 0) {
-      return cache[index];
+  std::array<int, 3> gaps{ 0 };
+  int current = 0;
+  for (int i = 1; i <= max; ++i) {
+    if (data.contains(i)) {
+      ++gaps[i - current - 1];
+      current = i;
     }
-    if (index == data.size() - 1) {
-      cache[index] = 1;
+  }
+  // Add the last gap of size 3
+  ++gaps[2];
+  return gaps;
+}
+
+long long n_arrangements(const std::unordered_set<int> &data, int max)
+{
+  std::unordered_map<int, long long> cache;
+  const auto impl = [&](auto &&f, int index) {
+    if (const auto it = cache.find(index); it != cache.cend()) {
+      return it->second;
+    }
+    if (index == max) {
+      cache.emplace(index, 1);
       return 1ll;
     }
     long long value = 0;
-    for (int i = index + 1; i < data.size() && data[i] - data[index] <= 3; ++i) {
+    for (int i = index + 1; i <= std::min(max, index + 3); ++i) {
+      if (data.contains(i)) {
         value += f(f, i);
+      }
     }
-    cache[index] = value;
+    cache.emplace(index, value);
     return value;
   };
-  long long value = 0;
-  for (int i = 0; data[i] <= 3; ++i) {
-    value += impl(impl, i);
-  }
-  return value;
+  return impl(impl, 0);
 }
 
 int main(int argc, char **argv)
 {
   auto data = parse(load_input(argc, argv));
 
-  ranges::sort(data);
-  auto diffs = ranges::accumulate(
-    ranges::views::zip(data, data | ranges::views::drop(1)),
-    std::array<int, 3>{},
-    [](auto acc, auto el) {
-      ++acc[el.second - el.first - 1];
-      return acc;
-    });
-  ++diffs[data[0] - 1];
-  ++diffs[2];
-  fmt::print("Part 1: {}\n", diffs[0] * diffs[2]);
-  fmt::print("Part 2: {}\n", n_arrangements(data));
+  auto max = *ranges::max_element(data);
+  const auto gaps = count_gaps(data, max);
+  fmt::print("Part 1: {}\n", gaps[0] * gaps[2]);
+  fmt::print("Part 2: {}\n", n_arrangements(data, max));
 }
