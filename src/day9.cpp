@@ -3,7 +3,6 @@
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
 #include <vector>
-#include <iostream>
 
 std::vector<long long> parse(std::istream&& is)
 {
