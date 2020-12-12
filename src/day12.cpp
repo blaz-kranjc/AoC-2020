@@ -5,6 +5,7 @@
 #include <vector>
 #include <array>
 #include <charconv>
+#include <exception>
 
 struct Instruction
 {
@@ -81,7 +82,9 @@ Position execute_part_1(const std::vector<Instruction>& is) {
         return std::pair{ position + i.amount * north, direction };
       } else if (i.type == 'S') {
         return std::pair{ position + i.amount * south, direction };
-      }
+      } else {
+        throw std::runtime_error("Unknown command.");
+       }
   }).first;
 }
 
@@ -105,6 +108,8 @@ Position execute_part_2(const std::vector<Instruction>& is) {
       return std::pair{ position, waypoint + i.amount * north };
     } else if (i.type == 'S') {
       return std::pair{ position, waypoint + i.amount * south };
+    } else {
+      throw std::runtime_error("Unknown command.");
     }
   }).first;
 }
