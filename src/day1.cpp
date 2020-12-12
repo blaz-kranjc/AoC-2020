@@ -17,9 +17,9 @@ std::unordered_set<int> parse(std::istream&& is)
 
 int main(int argc, char** argv)
 {
-  auto data = parse(load_input(argc, argv));
+  const auto data = parse(load_input(argc, argv));
 
-  auto part1 = [&] {
+  const auto part1 = [&] {
     for (auto e : data) {
       if (data.contains(2020 - e)) {
         return e * (2020 - e);
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
   }();
   fmt::print("Part 1: {}\n", part1);
 
-  auto part2 = [&] {
+  const auto part2 = [&] {
     for (auto e : data) {
       for (auto f : data | ranges::views::drop(1)) {
         const auto residual = 2020 - e - f;

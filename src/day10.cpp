@@ -55,9 +55,9 @@ long long n_arrangements(const std::unordered_set<int> &data, int max)
 
 int main(int argc, char **argv)
 {
-  auto data = parse(load_input(argc, argv));
+  const auto data = parse(load_input(argc, argv));
 
-  auto max = *ranges::max_element(data);
+  const auto max = *ranges::max_element(data);
   const auto gaps = count_gaps(data, max);
   fmt::print("Part 1: {}\n", gaps[0] * gaps[2]);
   fmt::print("Part 2: {}\n", n_arrangements(data, max));

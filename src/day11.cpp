@@ -153,7 +153,7 @@ PaddedVector2D<SeatState> simulate_until_steady(PaddedVector2D<SeatState> arrang
 
 int main(int argc, char **argv)
 {
-  auto data = parse(load_input(argc, argv));
+  const auto data = parse(load_input(argc, argv));
   fmt::print("Part 1: {}\n", ranges::count(simulate_until_steady<next_state_1, count_neighbours_1>(data).raw(), SeatState::Occupied));
   fmt::print("Part 2: {}\n", ranges::count(simulate_until_steady<next_state_2, count_neighbours_2>(data).raw(), SeatState::Occupied));
 }

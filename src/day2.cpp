@@ -31,7 +31,7 @@ std::vector<std::tuple<int, int, char, std::string>> parse(std::istream&& is)
 
 int main(int argc, char **argv)
 {
-  auto data = parse(load_input(argc, argv));
+  const auto data = parse(load_input(argc, argv));
 
   fmt::print(
     "Part 1: {}\n",

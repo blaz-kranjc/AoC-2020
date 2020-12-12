@@ -26,7 +26,7 @@ bool contains_sum(Iter begin, Iter end, const T& value) {
 
 int main(int argc, char** argv)
 {
-  auto data = parse(load_input(argc, argv));
+  const auto data = parse(load_input(argc, argv));
 
   const auto part1 = [&] {
     auto begin = data.cbegin();
