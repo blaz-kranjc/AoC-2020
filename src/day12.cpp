@@ -27,10 +27,8 @@ struct Position {
   int y;
 };
 
-constexpr Position& operator+=(Position& p, Position other) {
-  p.x += other.x;
-  p.y += other.y;
-  return p;
+constexpr Position operator+(Position l, Position r) {
+  return Position{ l.x + r.x, l.y + r.y };
 }
 
 constexpr Position operator*(int c, Position l) {
@@ -64,49 +62,51 @@ constexpr Position west{ -1, 0 };
 constexpr Position south{ 0, -1 };
 
 Position execute_part_1(const std::vector<Instruction>& is) {
-  Position position{ 0, 0 };
-  auto direction = east;
-  for (auto i : is) {
-    if (i.type == 'F') {
-      position += i.amount * direction;
-    } else if (i.type == 'R') {
-      direction = rotate(direction, Direction::Rigth, i.amount / 90);
-    } else if (i.type == 'L') {
-      direction = rotate(direction, Direction::Left, i.amount / 90);
-    } else if (i.type == 'E') {
-      position += i.amount * east;
-    } else if (i.type == 'W') {
-      position += i.amount * west;
-    } else if (i.type == 'N') {
-      position += i.amount * north;
-    } else if (i.type == 'S') {
-      position += i.amount * south;
-    }
-  }
-  return position;
+  return ranges::accumulate(
+    is,
+    std::pair{ Position{ 0, 0 }, east },
+    [](auto acc, Instruction i) {
+      const auto &[position, direction] = acc;
+      if (i.type == 'F') {
+        return std::pair{ position + i.amount * direction, direction };
+      } else if (i.type == 'R') {
+        return std::pair{ position, rotate(direction, Direction::Rigth, i.amount / 90) };
+      } else if (i.type == 'L') {
+        return std::pair{ position, rotate(direction, Direction::Left, i.amount / 90) };
+      } else if (i.type == 'E') {
+        return std::pair{ position + i.amount * east, direction };
+      } else if (i.type == 'W') {
+        return std::pair{ position + i.amount * west, direction };
+      } else if (i.type == 'N') {
+        return std::pair{ position + i.amount * north, direction };
+      } else if (i.type == 'S') {
+        return std::pair{ position + i.amount * south, direction };
+      }
+  }).first;
 }
 
 Position execute_part_2(const std::vector<Instruction>& is) {
-  Position position{ 0, 0 };
-  Position waypoint{ 10, 1 };
-  for (auto i : is) {
+  return ranges::accumulate(
+    is,
+    std::pair{ Position{ 0, 0 }, Position{ 10, 1 } },
+    [](auto acc, Instruction i) {
+      const auto &[position, waypoint] = acc;
     if (i.type == 'F') {
-      position += i.amount * waypoint;
+      return std::pair{ position + i.amount * waypoint, waypoint };
     } else if (i.type == 'R') {
-      waypoint = rotate(waypoint, Direction::Rigth, i.amount / 90);
+      return std::pair{ position, rotate(waypoint, Direction::Rigth, i.amount / 90) };
     } else if (i.type == 'L') {
-      waypoint = rotate(waypoint, Direction::Left, i.amount / 90);
+      return std::pair{ position, rotate(waypoint, Direction::Left, i.amount / 90) };
     } else if (i.type == 'E') {
-      waypoint += i.amount * east;
+      return std::pair{ position, waypoint + i.amount * east };
     } else if (i.type == 'W') {
-      waypoint += i.amount * west;
+      return std::pair{ position, waypoint + i.amount * west };
     } else if (i.type == 'N') {
-      waypoint += i.amount * north;
+      return std::pair{ position, waypoint + i.amount * north };
     } else if (i.type == 'S') {
-      waypoint += i.amount * south;
+      return std::pair{ position, waypoint + i.amount * south };
     }
-  }
-  return position;
+  }).first;
 }
 
 int main(int argc, char** argv)
