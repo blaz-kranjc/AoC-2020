@@ -3,10 +3,8 @@
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
 #include <unordered_map>
-#include <unordered_set>
 #include <bitset>
 #include <regex>
-#include <bit>
 
 static const std::regex mem_line{ R"(mem\[(\d+)\] = (\d+))"};
 
