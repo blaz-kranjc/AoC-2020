@@ -10,97 +10,83 @@
 
 static const std::regex mem_line{ R"(mem\[(\d+)\] = (\d+))"};
 
-struct Mask
+struct Instruction
 {
-  std::bitset<36> ones;
-  std::bitset<36> floats;
-  std::bitset<36> zeroes() const {
-    std::bitset<36> result;
-    result.set();
-    result &= ~ones;
-    result &= ~floats;
-    return result;
-  }
-};
-
-struct Memory
-{
-  std::size_t mask_index;
   std::uint64_t addr;
   std::uint64_t value;
+  std::bitset<36> mask;
+  std::bitset<36> float_mask;
 };
 
-Mask parse_mask(std::string_view str) {
-  Mask result;
+std::pair<std::bitset<36>, std::bitset<36>> parse_mask(std::string_view str)
+{
+  std::bitset<36> mask;
+  std::bitset<36> float_mask;
   for (auto [i, c] : str | ranges::views::reverse | ranges::views::enumerate) {
     if (c == '1') {
-      result.ones.set(i);
+      mask.set(i);
     } else if (c == 'X') {
-      result.floats.set(i);
+      float_mask.set(i);
     }
   }
-  return result;
+  return std::pair{ mask, float_mask };
 }
 
-struct Program
+std::vector<Instruction> parse(std::istream&& is)
 {
-  std::vector<Mask> masks;
-  std::vector<Memory> memory;
-};
-
-Program parse(std::istream&& is)
-{
-  std::vector<Mask> masks;
-  std::vector<Memory> memory;
+  std::vector<Instruction> instructions;
+  std::bitset<36> mask;
+  std::bitset<36> float_mask;
 
   for (std::string d; std::getline(is, d);) {
     if (d.starts_with("mask = ")) {
-      masks.push_back(parse_mask(std::string_view{ d.begin() + 7, d.begin() + 7 + 36 }));
+      std::tie(mask, float_mask) = parse_mask(std::string_view{ d.begin() + 7, d.begin() + 7 + 36 });
     } else {
       std::smatch match;
       if (!std::regex_match(d, match, mem_line)) {
         throw std::runtime_error{ "Mismatch in memory input" };
       }
-      memory.emplace_back(masks.size() - 1, std::stoull(match[1]), std::stoull(match[2]));
+      instructions.emplace_back(std::stoull(match[1]), std::stoull(match[2]), mask, float_mask);
     }
   }
-  return Program{ .masks = std::move(masks), .memory = std::move(memory) };
+  return instructions;
 }
 
-std::uint64_t part_1(const Program& program) {
+std::uint64_t part_1(const std::vector<Instruction>& program) {
   std::unordered_map<std::uint64_t, std::uint64_t> values;
-  for (const auto m : program.memory) {
-    const auto &mask = program.masks[m.mask_index];
-    values[m.addr] = m.value & (~mask.zeroes().to_ullong()) | mask.ones.to_ullong();
-  }
-  std::uint64_t sum = 0;
-  for (const auto [k, v] : values) {
-    sum += v;
-  }
-  return sum;
+  ranges::for_each(
+    program,
+    [&](const auto &m) {
+      values[m.addr] = (m.value & m.float_mask.to_ullong()) | m.mask.to_ullong();
+    });
+  return ranges::accumulate(
+    values | ranges::views::transform([](const auto &v) { return v.second; }),
+    0ULL
+  );
 }
 
-std::uint64_t part_2(const Program& program) {
-  std::unordered_map<std::uint64_t, std::uint64_t> values;
-  for (const auto m : program.memory) {
-    const auto &mask = program.masks[m.mask_index];
-    std::vector<std::uint64_t> keys{ m.addr | mask.ones.to_ullong() };
-    keys.reserve(1ULL << mask.floats.count());
-    for (int i = 0; i < 36; ++i) {
-      if (mask.floats.test(i)) {
-        std::transform(keys.cbegin(), keys.cend(), std::back_inserter(keys), [i](auto k) { return k ^ (1ULL << i); });
-      }
+std::vector<std::uint64_t> generate_values(std::uint64_t value, std::bitset<36> float_mask) {
+  std::vector<std::uint64_t> keys{ value };
+  keys.reserve(1ULL << float_mask.count());
+  for (int i = 0; i < float_mask.size(); ++i) {
+    if (float_mask.test(i)) {
+      std::transform(keys.cbegin(), keys.cend(), std::back_inserter(keys), [i](auto k) { return k ^ (1ULL << i); });
     }
-    for (const auto k : keys) {
+  }
+  return keys;
+}
+
+std::uint64_t part_2(const std::vector<Instruction>& program) {
+  std::unordered_map<std::uint64_t, std::uint64_t> values;
+  for (const auto m : program) {
+    for (const auto k : generate_values(m.addr | m.mask.to_ullong(), m.float_mask)) {
       values[k] = m.value;
     }
   }
-
-  std::uint64_t sum = 0;
-  for (const auto [k, v] : values) {
-    sum += v;
-  }
-  return sum;
+  return ranges::accumulate(
+    values | ranges::views::transform([](const auto &v) { return v.second; }),
+    0ULL
+  );
 }
 
 int main(int argc, char **argv)
