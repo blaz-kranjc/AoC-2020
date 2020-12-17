@@ -66,8 +66,9 @@ std::tuple<std::vector<Field>, ticket_t, std::vector<ticket_t>> parse(std::istre
     std::getline(is, line);
     my_ticket = parse_ticket(line);
   }
+  is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   for (std::string line; std::getline(is, line) && !line.empty();) {
-    fmt::print("{}\n", line);
     tickets.push_back(parse_ticket(line));
   }
   return std::tuple{ std::move(fields), std::move(my_ticket), std::move(tickets) };
