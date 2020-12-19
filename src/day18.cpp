@@ -5,7 +5,6 @@
 #include <vector>
 #include <stack>
 #include <string>
-#include <variant>
 
 std::vector<std::string> parse(std::istream &&is) {
   std::vector<std::string> result;
