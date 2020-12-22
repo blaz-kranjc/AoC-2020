@@ -3,7 +3,6 @@
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
 #include <vector>
-#include <stack>
 #include <string>
 #include <variant>
 #include <unordered_map>
