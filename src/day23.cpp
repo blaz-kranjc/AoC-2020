@@ -2,7 +2,7 @@
 
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
-#include <list>
+#include <vector>
 
 std::vector<int> parse(std::istream&& is) {
   std::vector<int> result;
