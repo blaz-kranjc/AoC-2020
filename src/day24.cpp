@@ -3,8 +3,33 @@
 #include <range/v3/all.hpp>
 #include <fmt/core.h>
 #include <array>
-#include <set>
-#include <map>
+#include <unordered_set>
+#include <unordered_map>
+
+template<typename T>
+inline constexpr void hash_combine(std::size_t &s, const T &v)
+{
+  // From boost::hash_combine
+  s ^= std::hash<T>()(v) + 0x9e3779b9 + (s << 6) + (s >> 2);
+};
+
+
+namespace std {
+
+template<typename T, std::size_t N>
+struct hash<std::array<T, N>>
+{
+  constexpr std::size_t operator()(const std::array<T, N> &v) const
+  {
+    std::size_t hash = 0;
+    for (const auto &el : v) {
+      hash_combine(hash, el);
+    }
+    return hash;
+  }
+};
+
+} // namespace std
 
 using Coord = std::array<int, 3>;
 constexpr Coord east{ +1, -1, 0 };
@@ -19,26 +44,26 @@ Coord operator+(Coord l, Coord r) {
   return Coord{ l[0] + r[0], l[1] + r[1], l[2] + r[2] };
 }
 
-std::vector<Coord> parse_coordinates(std::string_view s) {
-  std::vector<Coord> result;
+Coord parse_coordinate(std::string_view s) {
+  Coord result{ 0, 0, 0 };
   while (!s.empty()) {
     if (s.starts_with("e")) {
-      result.push_back(east);
+      result = result + east;
       s = s.substr(1);
     } else if (s.starts_with("w")) {
-      result.push_back(west);
+      result = result + west;
       s = s.substr(1);
     } else if (s.starts_with("sw")) {
-      result.push_back(south_west);
+      result = result + south_west;
       s = s.substr(2);
     } else if (s.starts_with("se")) {
-      result.push_back(south_east);
+      result = result + south_east;
       s = s.substr(2);
     } else if (s.starts_with("ne")) {
-      result.push_back(north_east);
+      result = result + north_east;
       s = s.substr(2);
     } else if (s.starts_with("nw")) {
-      result.push_back(north_west);
+      result = result + north_west;
       s = s.substr(2);
     } else {
       throw std::runtime_error("Unable to parse the coordinates.");
@@ -47,39 +72,27 @@ std::vector<Coord> parse_coordinates(std::string_view s) {
   return result;
 }
 
-std::vector<std::vector<Coord>> parse(std::istream&& is) {
-  std::vector<std::vector<Coord>> result;
+std::unordered_set<Coord> parse(std::istream&& is) {
+  std::unordered_set<Coord> result;
   for (std::string line; std::getline(is, line);) {
-    result.push_back(parse_coordinates(line));
+    const auto coord = parse_coordinate(line);
+    const auto [it, inserted] = result.insert(coord);
+    if (!inserted) {
+      result.erase(it);
+    }
   }
   return result;
 }
 
-std::set<Coord> get_black(const std::vector<std::vector<Coord>> &coordinates)
-{
-  std::set<Coord> blacks;
-  for (const auto &path : coordinates) {
-    Coord end{ 0, 0, 0 };
-    for (const auto v : path) {
-      end = end + v;
-    }
-    const auto [it, inserted] = blacks.insert(end);
-    if (!inserted) {
-      blacks.erase(it);
-    }
-  }
-  return blacks;
-}
-
-std::set<Coord> propagate(std::set<Coord> blacks, int count) {
+std::unordered_set<Coord> propagate(std::unordered_set<Coord> blacks, int count) {
   for (int i = 0; i < count; ++i) {
-    std::map<Coord, int> black_neighbours;
+    std::unordered_map<Coord, int> black_neighbours;
     for (const auto p : blacks) {
       for (const auto n : neighbours) {
         black_neighbours[p + n] += 1;
       }
     }
-    std::set<Coord> new_blacks;
+    std::unordered_set<Coord> new_blacks;
     for (const auto [p, v] : black_neighbours) {
       const auto is_black = blacks.contains(p);
       if ((is_black && (v == 1 || v == 2)) || (!is_black && v == 2)) {
@@ -93,8 +106,7 @@ std::set<Coord> propagate(std::set<Coord> blacks, int count) {
 
 int main(int argc, char **argv)
 {
-  const auto data = parse(load_input(argc, argv));
-  const auto black = get_black(data);
-  fmt::print("Part 1: {}\n", black.size());
-  fmt::print("Part 2: {}\n", propagate(black, 100).size());
+  auto data = parse(load_input(argc, argv));
+  fmt::print("Part 1: {}\n", data.size());
+  fmt::print("Part 2: {}\n", propagate(std::move(data), 100).size());
 }
