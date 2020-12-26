@@ -31,5 +31,4 @@ int main(int argc, char **argv)
   const auto [k1, k2] = parse(load_input(argc, argv));
   const long long k1_rounds = find_rounds(k1);
   fmt::print("Part 1: {}\n", round(1, k2, k1_rounds));
-  fmt::print("Part 2: {}\n", "TODO");
 }
