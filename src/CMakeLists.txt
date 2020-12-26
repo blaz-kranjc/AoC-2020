@@ -4,12 +4,12 @@ find_package (range-v3 CONFIG REQUIRED)
 find_package (fmt REQUIRED)
 
 configure_file(input_file_loader.cpp.in input_file_loader.cpp @ONLY)
-add_library(aoc-helper ${CMAKE_CURRENT_BINARY_DIR}/input_file_loader.cpp)
+add_library(aoc-helper ${CMAKE_CURRENT_BINARY_DIR}/input_file_loader.cpp "padded_vector_2d.h")
 target_include_directories(aoc-helper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(aoc-helper PUBLIC cxx_std_20)
 
 function(aoc2020 number)
-  add_executable(day${number} "day${number}.cpp")
+  add_executable(day${number} "day${number}.cpp" "padded_vector_2d.h")
   target_link_libraries (day${number} PUBLIC range-v3::range-v3 fmt::fmt aoc-helper)
 endfunction()
 
